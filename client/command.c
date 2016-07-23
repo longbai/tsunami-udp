@@ -172,7 +172,7 @@ ttp_session_t *command_connect(command_t *command, ttp_parameter_t *parameter)
     /* get the shared secret from the user */
     if (parameter->passphrase == NULL)
         secret = strdup(DEFAULT_SECRET);
-    else 
+    else
         secret = strdup(parameter->passphrase);
     // if (NULL == (secret = getpass("Password: ")))
     //   error("Could not read shared secret");
@@ -199,7 +199,7 @@ ttp_session_t *command_connect(command_t *command, ttp_parameter_t *parameter)
  *
  * Tries to request a list of server shared files and their sizes.
  * Returns 0 on a successful transfer and nonzero on an error condition.
- * Allocates and fills out session->fileslist struct, the caller needs to 
+ * Allocates and fills out session->fileslist struct, the caller needs to
  * free it after use.
  *------------------------------------------------------------------------*/
 int command_dir(command_t *command, ttp_session_t *session)
@@ -209,24 +209,24 @@ int command_dir(command_t *command, ttp_session_t *session)
     u_int16_t num_files, i;
     size_t    filelen;
     u_int16_t status = 0;
-    
+
     /* make sure that we have an open session */
     if (session == NULL || session->server == NULL)
 	return warn("Not connected to a Tsunami server");
 
     /* send request and parse the result */
     fprintf(session->server, "%s\n", TS_DIRLIST_HACK_CMD);
-    
+
     status = fread(&result, 1, 1, session->server);
     if (status < 1)
         return warn("Could not read response to directory request");
     if (result == 8)
         return warn("Server does no support listing of shared files");
-    
-    read_str[0] = result;  
+
+    read_str[0] = result;
     fread_line(session->server, &read_str[1], sizeof(read_str)-2);
     num_files = atoi(read_str);
-    
+
     fprintf(stderr, "Remote file list:\n");
     for (i=0; i<num_files; i++) {
         fread_line(session->server, read_str, sizeof(read_str)-1);
@@ -234,9 +234,10 @@ int command_dir(command_t *command, ttp_session_t *session)
         fread_line(session->server, read_str, sizeof(read_str)-1);
         filelen = atol(read_str);
         fprintf(stderr, "%8Lu bytes\n", (ull_t)filelen);
-    } 
+    }
     fprintf(stderr, "\n");
     fwrite("\0", 1, 1, session->server);
+    fflush(session->server);
     return 0;
 }
 
@@ -654,7 +655,7 @@ int command_get(command_t *command, ttp_session_t *session)
     mbit_good    /= (1024.0*1024.0);
     mbit_file    /= (1024.0*1024.0);
     time_secs     = delta / 1e6;
-    printf("PC performance figure : %llu packets dropped (if high this indicates receiving PC overload)\n", 
+    printf("PC performance figure : %llu packets dropped (if high this indicates receiving PC overload)\n",
                                          (ull_t)(xfer->stats.this_udp_errors - xfer->stats.start_udp_errors));
     printf("Transfer duration     : %0.2f seconds\n", time_secs);
     printf("Total packet data     : %0.2f Mbit\n", mbit_thru);
@@ -670,7 +671,7 @@ int command_get(command_t *command, ttp_session_t *session)
         } else {
            printf("lossless mode - but lost count=%u > 0, please file a bug report!!\n", xfer->stats.total_lost);
         }
-    } else { 
+    } else {
         if (session->parameter->losswindow_ms == 0) {
             printf("lossy\n");
         } else {
@@ -728,7 +729,7 @@ int command_get(command_t *command, ttp_session_t *session)
     if (xfer->file     != NULL) { fclose(xfer->file);    xfer->file     = NULL; }
     if (rexmit->table  != NULL) { free(rexmit->table);   rexmit->table  = NULL; }
     if (xfer->received != NULL) { free(xfer->received);  xfer->received = NULL; }
-    if (local_datagram != NULL) { free(local_datagram);  local_datagram = NULL; }    
+    if (local_datagram != NULL) { free(local_datagram);  local_datagram = NULL; }
     return -1;
 }
 
@@ -858,18 +859,18 @@ int command_set(command_t *command, ttp_parameter_t *parameter)
       else if (!strcasecmp(command->text[1], "ip"))         parameter->ipv6_yn       = (strcmp(command->text[2], "v6")  == 0);
       else if (!strcasecmp(command->text[1], "output"))     parameter->output_mode   = (strcmp(command->text[2], "screen") ? LINE_MODE : SCREEN_MODE);
       else if (!strcasecmp(command->text[1], "rateadjust")) parameter->rate_adjust   = (strcmp(command->text[2], "yes") == 0);
-      else if (!strcasecmp(command->text[1], "rate"))       { 
+      else if (!strcasecmp(command->text[1], "rate"))       {
         long multiplier = 1;
         char *cmd = (char*)command->text[2];
         char cpy[256];
         int l = strlen(cmd);
         strcpy(cpy, cmd);
-        if(l>1 && (toupper(cpy[l-1]))=='M') { 
-            multiplier = 1000000; cpy[l-1]='\0';  
-        } else if(l>1 && toupper(cpy[l-1])=='G') { 
-            multiplier = 1000000000; cpy[l-1]='\0';   
+        if(l>1 && (toupper(cpy[l-1]))=='M') {
+            multiplier = 1000000; cpy[l-1]='\0';
+        } else if(l>1 && toupper(cpy[l-1])=='G') {
+            multiplier = 1000000000; cpy[l-1]='\0';
         }
-        parameter->target_rate   = multiplier * atol(cpy); 
+        parameter->target_rate   = multiplier * atol(cpy);
       }
       else if (!strcasecmp(command->text[1], "error"))        parameter->error_rate    = atof(command->text[2]) * 1000.0;
       else if (!strcasecmp(command->text[1], "slowdown"))     parse_fraction(command->text[2], &parameter->slower_num, &parameter->slower_den);
@@ -877,7 +878,7 @@ int command_set(command_t *command, ttp_parameter_t *parameter)
       else if (!strcasecmp(command->text[1], "history"))      parameter->history       = atoi(command->text[2]);
       else if (!strcasecmp(command->text[1], "lossless"))     parameter->lossless      = (strcmp(command->text[2], "yes") == 0);
       else if (!strcasecmp(command->text[1], "losswindow"))   parameter->losswindow_ms = atol(command->text[2]);
-      else if (!strcasecmp(command->text[1], "blockdump"))    parameter->blockdump     = (strcmp(command->text[2], "yes") == 0);    
+      else if (!strcasecmp(command->text[1], "blockdump"))    parameter->blockdump     = (strcmp(command->text[2], "yes") == 0);
       else if (!strcasecmp(command->text[1], "passphrase")) {
         if (parameter->passphrase != NULL) free(parameter->passphrase);
         parameter->passphrase = strdup(command->text[2]);
